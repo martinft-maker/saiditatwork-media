@@ -1,0 +1,46 @@
+# Manus-ID som er rendret og planlagt. Én per linje: id|publiseringsdato (Europe/Oslo)|slot
+# Batch 1 (16.-17. nov) og batch 2 (17.-24. nov), 08:00-batch (18.-24. nov)
+001
+002
+005
+008
+046
+055
+056
+067
+078
+096
+003
+047
+057
+070
+079
+091
+097
+004
+048
+058
+068
+080
+092
+098
+006
+049
+059
+069
+081
+093
+099
+007
+050
+051
+060
+071
+082
+094
+009
+100
+# Sperret til de er skrevet om (inneholder plassholdere):
+066
+073
+089
