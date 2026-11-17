@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 200 200">
+<rect x="0" y="0" width="200" height="100" fill="#DE4046"/>
+<rect x="0" y="100" width="200" height="100" fill="#1A9262"/>
+<rect x="0" y="98" width="200" height="4" fill="#16161A"/>
+<text x="100" y="84" text-anchor="middle" font-family="Poppins" font-weight="800" font-size="50" letter-spacing="-1.5" fill="#FFFFFF">said</text>
+<text x="100" y="150" text-anchor="middle" font-family="Poppins" font-weight="800" font-size="50" letter-spacing="-1.5" fill="#FFFFFF">it.</text>
+</svg>
