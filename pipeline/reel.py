@@ -10,6 +10,7 @@ IDS is a comma-separated list such as 001,046,067.
 Needs: python3 with Pillow, ffmpeg, the Poppins fonts (Bold, Medium).
 """
 import math, os, re, subprocess, sys
+import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 W, H, FPS = 1080, 1920, 30
@@ -190,13 +191,104 @@ def frame(t, p):
     return img
 
 
-def make_audio(path, dur):
-    """Low thud at 0 s and a two-note chime when the green panel lands."""
-    expr = ("0.30*sin(2*PI*170*t)*exp(-22*t)"
-            "+gte(t,1.3)*0.20*(sin(2*PI*784*(t-1.3))+0.5*sin(2*PI*1176*(t-1.3)))*exp(-6*(t-1.3))")
-    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i",
-                    f"aevalsrc='{expr}':s=44100:d={dur}", "-ac", "2", "-c:a", "aac", "-b:a", "128k", path],
+SR = 44100
+BPM = 100
+# Three original chord loops (Hz of root, chord intervals in semitones). Chosen per script id.
+PROGRESSIONS = [
+    [(220.00, (0, 3, 7)), (174.61, (0, 4, 7)), (130.81, (0, 4, 7, 11)), (196.00, (0, 4, 7))],   # Am F Cmaj7 G
+    [(146.83, (0, 3, 7, 10)), (196.00, (0, 4, 7)), (130.81, (0, 4, 7)), (220.00, (0, 3, 7))],  # Dm7 G C Am
+    [(174.61, (0, 4, 7, 11)), (164.81, (0, 3, 7)), (146.83, (0, 3, 7)), (196.00, (0, 4, 7))],  # Fmaj7 Em Dm G
+]
+
+
+def _env(n, attack, decay):
+    t = np.arange(n) / SR
+    return np.minimum(1.0, t / max(attack, 1e-4)) * np.exp(-t / decay)
+
+
+def _lowpass(x, cutoff):
+    a = math.exp(-2 * math.pi * cutoff / SR)
+    y = np.empty_like(x)
+    acc = 0.0
+    for i in range(len(x)):          # one-pole filter; short clips so a loop is fine
+        acc = (1 - a) * x[i] + a * acc
+        y[i] = acc
+    return y
+
+
+def _add(buf, sig, at):
+    i = int(at * SR)
+    if i >= len(buf):
+        return
+    j = min(len(buf), i + len(sig))
+    buf[i:j] += sig[:j - i]
+
+
+def music(dur, variant):
+    """Original lo-fi beat: kick, clap, hats, bass, soft chords, plus the reveal chime."""
+    n = int(dur * SR)
+    rng = np.random.default_rng(variant)
+    beat = 60.0 / BPM
+    drums, bass, pad = np.zeros(n), np.zeros(n), np.zeros(n)
+    duck = np.ones(n)
+
+    kn = int(0.35 * SR); kt = np.arange(kn) / SR
+    kick = np.sin(2 * np.pi * (45 * kt + 75 * (1 - np.exp(-kt * 30)) / 30)) * np.exp(-kt * 9)
+    cn = int(0.18 * SR)
+    clap = _lowpass(rng.standard_normal(cn), 2500) * _env(cn, 0.001, 0.045) * 1.6
+    hn = int(0.05 * SR)
+    hat = np.diff(rng.standard_normal(hn + 1)) * _env(hn, 0.0005, 0.012) * 0.25
+
+    b = 0
+    while b * beat < dur:
+        t = b * beat
+        if b % 4 in (0, 2) or (b % 8 == 7):
+            _add(drums, kick * 0.9, t)
+            d0, d1 = int(t * SR), min(n, int((t + 0.22) * SR))
+            duck[d0:d1] = np.minimum(duck[d0:d1], np.linspace(0.45, 1.0, d1 - d0))
+        if b % 4 in (1, 3):
+            _add(drums, clap * 0.55, t)
+        _add(drums, hat, t)
+        _add(drums, hat * 0.6, t + beat / 2)
+        b += 1
+
+    prog = PROGRESSIONS[variant % len(PROGRESSIONS)]
+    bar = 4 * beat
+    k = 0
+    while k * bar < dur:
+        root, ivs = prog[k % len(prog)]
+        ln = int(bar * SR); t = np.arange(ln) / SR
+        chord = sum(np.sin(2 * np.pi * root * 2 ** (iv / 12) * t + 0.3 * np.sin(2 * np.pi * 2.5 * t))
+                    for iv in ivs) / len(ivs)
+        _add(pad, chord * _env(ln, 0.08, 3.0) * 0.32, k * bar)
+        for q in range(4):            # bass on every beat, octave below root
+            bn = int(beat * 0.9 * SR); bt = np.arange(bn) / SR
+            note = root / 2 * (2 if q == 3 else 1)
+            _add(bass, np.sin(2 * np.pi * note * bt) * _env(bn, 0.005, 0.25) * 0.5, k * bar + q * beat)
+        k += 1
+
+    pad = _lowpass(pad, 1800)
+    t = np.arange(n) / SR
+    chime = (t >= REVEAL[0]) * 0.22 * (np.sin(2 * np.pi * 784 * (t - REVEAL[0])) +
+                                       0.5 * np.sin(2 * np.pi * 1176 * (t - REVEAL[0]))) * np.exp(-6 * np.clip(t - REVEAL[0], 0, None))
+    mix = drums * 0.8 + (bass + pad) * duck + chime
+    fade_in, fade_out = int(0.03 * SR), int(0.5 * SR)
+    mix[:fade_in] *= np.linspace(0, 1, fade_in)
+    mix[-fade_out:] *= np.linspace(1, 0, fade_out)
+    return mix / (np.max(np.abs(mix)) + 1e-9) * 0.89
+
+
+def make_audio(path, dur, variant=0):
+    """Write the music bed as AAC. Original, synthesized here: no licensed music."""
+    import wave
+    pcm = (np.clip(music(dur, variant), -1, 1) * 32767).astype(np.int16)
+    wav = path[:-4] + ".wav"
+    with wave.open(wav, "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR)
+        w.writeframes(pcm.tobytes())
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", wav, "-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-ar", "44100", "-ac", "2", "-c:a", "aac", "-b:a", "160k", path],
                    check=True)
+    os.remove(wav)
 
 
 def render(e, outdir):
@@ -212,7 +304,7 @@ def render(e, outdir):
     ff.stdin.close()
     if ff.wait() != 0:
         sys.exit("ffmpeg failed on " + e["id"])
-    make_audio(audio, p["dur"])
+    make_audio(audio, p["dur"], int(re.sub(r"\D", "", e["id"]) or 0))
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", silent, "-i", audio, "-map", "0:v", "-map", "1:a",
                     "-c:v", "copy", "-c:a", "copy", "-movflags", "+faststart", tmp], check=True)
     os.replace(tmp, out)
