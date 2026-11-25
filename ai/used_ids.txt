@@ -1,0 +1,3 @@
+# NNN|manus-id|dato|tid|krok|media_id
+ai_001|011|2026-11-25|19:30|When the meeting could've been an email|7b9fd0c9-aa97-412f-b0b7-6969ac1634a8
+ai_002|007|2026-11-26|12:30|When your boss takes credit for your work|965ba0b9-3d84-4def-b6e0-4e7c49893cf6

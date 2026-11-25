@@ -1,10 +1,23 @@
 """saiditatwork AI-video (25. nov 2026): krok øverst, THOUGHT IT / SAID IT AT WORK-merke, undertekster, @saiditatwork.
 Kjøres i Higgsfield-sandkassen (sandbox_exec): ffmpeg, Pillow, faster-whisper og Montserrat finnes der.
-Bruk: python3 finish_sa.py inn.mp4 ut.mp4 "Krok" CUT_SEK
-CUT_SEK = når fantasi-skuddet går over i virkelighets-skuddet (finn med fargeendring/scene-sjekk, typisk 4.5–5.2 s)."""
+Bruk: python3 finish_sa.py inn.mp4 ut.mp4 "Krok" [CUT_SEK]
+Uten CUT_SEK finnes overgangen fantasi -> virkelighet automatisk (typisk 4.5–5.2 s). Skriv ut «cut X» – sjekk at den er rimelig."""
 import sys, subprocess, os
 from PIL import Image, ImageDraw, ImageFont
-src, out, hook, cut = sys.argv[1], sys.argv[2], sys.argv[3], float(sys.argv[4])
+src, out, hook = sys.argv[1], sys.argv[2], sys.argv[3]
+def find_cut(path):
+    """Finner overgangen fantasi -> virkelighet: størst fargeforskjell mellom 0,5 s før og etter (3–7 s)."""
+    import numpy as np, glob, tempfile
+    tmp = tempfile.mkdtemp()
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", path, "-vf", "fps=6,scale=54:96", f"{tmp}/f_%03d.png"], check=True)
+    fr = [np.asarray(Image.open(f).convert("RGB"), float) for f in sorted(glob.glob(f"{tmp}/f_*.png"))]
+    best = (0, 5.0)
+    for i in range(18, min(len(fr) - 3, 43)):
+        dd = np.abs(fr[i + 3].mean(axis=(0, 1)) - fr[i - 3].mean(axis=(0, 1))).sum() + np.abs(fr[i + 1] - fr[i]).mean()
+        if dd > best[0]: best = (dd, (i + 0.5) / 6)
+    return round(best[1], 2)
+cut = float(sys.argv[4]) if len(sys.argv) > 4 else find_cut(src)
+print("cut", cut)
 W, H = 1080, 1920
 FB = "/usr/share/fonts/truetype/higgsfield/Montserrat-ExtraBold.ttf"
 def fnt(s): return ImageFont.truetype(FB, s)
