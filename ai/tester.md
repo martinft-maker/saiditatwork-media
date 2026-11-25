@@ -10,3 +10,9 @@ Format: skudd 1 = fantasien (overdrevet, rødt lys/spotlight, slow motion, «THO
 
 Offentlig URL: https://d2ol7oe51mr4n9.cloudfront.net/user_3MYPHZmdAR0Xyri7ew1BaRKGzcO/<media_id>.mp4
 Ikke planlagt – venter på Martins vurdering. Ingen ny Higgsfield-produksjon før Martin sier fra.
+
+## Ukesløp 25. nov 2026 (ai_003–ai_015)
+13 laget og planlagt 26. nov 19:30 → 2. des 19:30. 16 genereringer (400 kreditter): 3 laget på nytt én gang —
+ai_006 (uleselig tekst på arket), ai_007 (skudd 2 rotert 90°, uleselig kalender), ai_012 (to versjoner av figuren i samme bilde).
+Undertekster laget med ai/finish_sa2.py (ordtidsstempler + SA_LINES fra manus): finish_sa.py ga undertekst som krysset kuttet (ai_003, ai_014)
+og overlappende undertekster (ai_008). Sandkassens ~/satools/finish_sa.py var en annen versjon enn repoet – ble erstattet med repo-versjonen.

@@ -1,3 +1,16 @@
 # NNN|manus-id|dato|tid|krok|media_id
 ai_001|011|2026-11-25|19:30|When the meeting could've been an email|7b9fd0c9-aa97-412f-b0b7-6969ac1634a8
 ai_002|007|2026-11-26|12:30|When your boss takes credit for your work|965ba0b9-3d84-4def-b6e0-4e7c49893cf6
+ai_003|003|2026-11-26|19:30|When the meeting has no point|8c7d9b44-9c64-4b79-8f60-d45b6ab4babd
+ai_004|002|2026-11-27|12:30|When your boss watches every click|068f0063-aa88-4e9b-a879-1884a986766d
+ai_005|008|2026-11-27|19:30|When they ask you to work Saturday|0cb898f6-8e80-405e-8c79-501274c0a023
+ai_006|010|2026-11-28|12:30|When they clearly didn't read your email|2e7be998-9555-4700-9bc0-706ed5eff8ac
+ai_007|037|2026-11-28|19:30|When the deadline is basically yesterday|ba7a8897-a1c7-4ab2-82d6-9f204c8e78a2
+ai_008|005|2026-11-29|12:30|When they pile on one more task|427dd9ff-6157-449d-a7f4-1b23bdb4933c
+ai_009|020|2026-11-29|19:30|When someone interrupts your deep focus|e4369434-ba11-43a9-9827-097702cbbe85
+ai_010|009|2026-11-30|12:30|When someone pitches a truly terrible idea|65376e55-c68f-4806-b51f-2a90c7f78443
+ai_011|029|2026-11-30|19:30|When your boss emails at midnight|3a4204ad-d851-45ab-aa79-471dff254987
+ai_012|016|2026-12-01|12:30|When they ask if it's done yet|34a3f98e-d10c-4d4a-8c83-52d4b641a398
+ai_013|034|2026-12-01|19:30|When the brief changes for the fifth time|726605dd-e192-44f7-9798-d61c54bbee55
+ai_014|004|2026-12-02|12:30|When you have to explain it again|31897def-a5d4-49c3-8760-5b92e52e1a09
+ai_015|045|2026-12-02|19:30|When nobody will make a decision|f6f93e72-8fc7-4384-8567-79c539d8a124
